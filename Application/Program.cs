@@ -46,7 +46,7 @@ class Program
         finally
         {
             listener.Close();
-            Console.WriteLine("[SERVER] Resursi oslobođeni.");
+            Console.WriteLine("[SERVER] Server zaustavljen.");
         }
     }
 
