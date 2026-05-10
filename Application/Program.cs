@@ -5,6 +5,7 @@ using System.Threading;
 
 class Program
 {
+    private static SemaphoreSlim semaphoreTP = new SemaphoreSlim(5, 5);
     static void Main(string[] args)
     {
         HttpListener listener = new HttpListener();
@@ -30,7 +31,19 @@ class Program
                 try
                 {
                     HttpListenerContext context = listener.GetContext();
-                    ThreadPool.QueueUserWorkItem(ProcessRequest, context);
+
+                    semaphoreTP.Wait();
+                    ThreadPool.QueueUserWorkItem(state =>
+                    {
+                        try
+                        {
+                            ProcessRequest(state);
+                        }
+                        finally
+                        {
+                            semaphoreTP.Release();
+                        }
+                    }, context);
                 }
                 catch (HttpListenerException ex) when (!serverRunning)
                 {
@@ -52,6 +65,8 @@ class Program
 
     private static void ProcessRequest(object state)
     {
+        Console.WriteLine($"[ULAZ] Nit {Thread.CurrentThread.ManagedThreadId} ušla. Preostalo mesta: {semaphoreTP.CurrentCount}");
+
         HttpListenerContext context = (HttpListenerContext)state;
         var request = context.Request;
 
